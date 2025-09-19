@@ -64,16 +64,6 @@ Abre http://localhost:3001 en tu navegador. La app recargará ante cambios.
 - `npm run build` — Build de producción en `build/`.
 - `npm test` — Ejecuta tests (si existiesen).
 
-## Troubleshooting
-
-- Pantalla vacía o errores CORS:
-  - Verifica que el backend corra y CORS esté habilitado. En el backend (`src/main.ts`) se usa `app.enableCors()`.
-  - Asegura que `REACT_APP_API_URL` apunte al backend correcto.
-
-- Errores al llamar `/auth/*` o `/songs`:
-  - Comprueba la consola del navegador y el terminal del backend.
-  - Si el backend devuelve 500, revisa su `.env` y la conexión a la base de datos (ver README del backend).
-
 ## Integración con el Backend
 
 - Backend por defecto: `http://localhost:3000`.
