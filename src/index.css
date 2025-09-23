@@ -12,3 +12,19 @@
 .container-responsive {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
 }
+
+/* Now playing equalizer */
+@keyframes eq-bounce {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+.eq-bars { display: inline-flex; align-items: end; gap: 2px; height: 12px; }
+.eq-bars span {
+  width: 3px;
+  height: 100%;
+  background-color: rgb(139 92 246); /* brand */
+  transform-origin: bottom;
+  animation: eq-bounce 1s infinite ease-in-out;
+}
+.eq-bars span:nth-child(2) { animation-delay: .1s; }
+.eq-bars span:nth-child(3) { animation-delay: .2s; }
