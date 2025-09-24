@@ -2,12 +2,16 @@ import React from 'react';
 import Navbar from '../../../components/Navbar';
 import { useEffect, useState } from 'react';
 import { getSongs, getTopSongs, Song } from '../../songs/api';
+import BottomPlayer from '../../../player/AudioPlayer';
+import { usePlayer } from '../../../player/PlayerContext';
+import { Play } from 'lucide-react';
 
 export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [top, setTop] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setQueueAndPlay, current, isPlaying } = usePlayer();
 
   useEffect(() => {
     let mounted = true;
@@ -53,14 +57,29 @@ export default function Home() {
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               {top.slice(0, 10).map((song, idx) => (
                 <article key={song.id} className="group relative bg-white border border-neutral-200 rounded-xl overflow-hidden dark:bg-white/5 dark:border-white/10">
-                  <div
-                    className="aspect-square bg-cover bg-center"
-                    style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/400/400' })` }}
-                  />
+                  <button
+                    onClick={() => setQueueAndPlay(top, idx)}
+                    className="block w-full text-left">
+                    <div
+                      className="aspect-square bg-cover bg-center"
+                      style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/400/400' })` }}
+                    />
+                  </button>
+                  {current?.id === song.id && isPlaying && (
+                    <div className="absolute left-2 bottom-14">
+                      <div className="eq-bars"><span></span><span></span><span></span></div>
+                    </div>
+                  )}
                   {/* Rank badge */}
                   <div className="absolute left-2 top-2 size-9 rounded-md grid place-items-center font-bold text-white bg-black/60 dark:bg-black/60">
                     {idx + 1}
                   </div>
+                  <button
+                    aria-label="Reproducir"
+                    onClick={() => setQueueAndPlay(top, idx)}
+                    className="absolute right-2 bottom-14 p-2 rounded-full bg-brand text-white shadow-md hover:brightness-110">
+                    <Play size={20} />
+                  </button>
                   <div className="p-3">
                     <div className="font-medium truncate">{song.title}</div>
                     <div className="text-sm text-neutral-600 dark:text-white/60 truncate">{song.artist}</div>
@@ -82,18 +101,27 @@ export default function Home() {
               {songs.length === 0 && (
                 <div className="text-neutral-600 dark:text-white/60">No hay canciones aún.</div>
               )}
-              {songs.map((song) => (
-                <article key={song.id} className="group bg-white border border-neutral-200 rounded-xl overflow-hidden dark:bg-white/5 dark:border-white/10">
-                  <div
-                    className="aspect-video bg-cover bg-center"
-                    style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/600/400' })` }}
-                  />
+              {songs.map((song, idx) => (
+                <article key={song.id} className="group relative bg-white border border-neutral-200 rounded-xl overflow-hidden dark:bg-white/5 dark:border-white/10">
+                  <button onClick={() => setQueueAndPlay(songs, idx)} className="block w-full text-left">
+                    <div
+                      className="aspect-video bg-cover bg-center"
+                      style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/600/400' })` }}
+                    />
+                  </button>
+                  {current?.id === song.id && isPlaying && (
+                    <div className="absolute left-3 top-3">
+                      <div className="eq-bars"><span></span><span></span><span></span></div>
+                    </div>
+                  )}
                   <div className="p-4 flex items-center justify-between">
                     <div>
                       <div className="font-medium">{song.title}</div>
                       <div className="text-sm text-neutral-600 dark:text-white/60">{song.artist}</div>
                     </div>
-                    <button className="size-10 rounded-full bg-brand/90 hover:bg-brand text-white grid place-items-center">▶</button>
+                    <button aria-label="Reproducir" onClick={() => setQueueAndPlay(songs, idx)} className="p-2 rounded-full bg-brand text-white hover:brightness-110">
+                      <Play size={20} />
+                    </button>
                   </div>
                 </article>
               ))}
@@ -101,7 +129,7 @@ export default function Home() {
           )}
         </section>
       </main>
+      <BottomPlayer />
     </div>
   );
 }
-
