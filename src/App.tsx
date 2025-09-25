@@ -8,6 +8,7 @@ import { useAuth } from './features/auth/AuthContext';
 import Genres from './features/genres/pages/Genres';
 import Artists from './features/artists/pages/Artists';
 import Mixes from './features/mixes/pages/Mixes';
+import MixDetail from './features/mixes/pages/MixDetail';
 import Favorites from './features/favorites/pages/Favorites';
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/genres" element={<ProtectedRoute><Genres /></ProtectedRoute>} />
       <Route path="/artists" element={<ProtectedRoute><Artists /></ProtectedRoute>} />
       <Route path="/mixes" element={<ProtectedRoute><Mixes /></ProtectedRoute>} />
+      <Route path="/mixes/:id" element={<ProtectedRoute><MixDetail /></ProtectedRoute>} />
       <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
     </Routes>
   );
