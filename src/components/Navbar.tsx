@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import Logo from './Logo';
 import { useAuth } from '../features/auth/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -30,7 +31,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <button onClick={toggle} aria-label="Cambiar tema"
             className="text-sm px-3 py-2 rounded-md border border-neutral-300 text-neutral-700 hover:bg-neutral-100 dark:border-white/10 dark:text-white/80 dark:hover:bg-white/10">
-            {theme === 'dark' ? '☀️ Claro' : '🌙 Oscuro'}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
           {!user ? (
             <>
@@ -39,8 +40,7 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <span className="text-sm text-neutral-700 dark:text-white/80">Hola, <span className="text-neutral-900 dark:text-white font-medium">{user.username}</span></span>
-              <button onClick={logout} className="text-sm bg-neutral-200 hover:bg-neutral-300 text-neutral-900 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white px-3 py-2 rounded-md">Salir</button>
+              <button onClick={logout} className="text-sm bg-neutral-200 hover:bg-neutral-300 text-neutral-900 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white px-3 py-2 rounded-md">Cerrar sesión</button>
             </>
           )}
         </div>
