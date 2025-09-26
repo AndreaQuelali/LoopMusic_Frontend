@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import { getSongs, getTopSongs, Song } from '../../songs/api';
 import BottomPlayer from '../../../player/AudioPlayer';
 import { usePlayer } from '../../../player/PlayerContext';
-import { Play, MoreVertical, Search } from 'lucide-react';
+import { Play, MoreVertical, Heart, Search } from 'lucide-react';
 import CreateMixModal from '../../mixes/components/CreateMixModal';
-import { useAuth } from '../../auth/AuthContext';
+import { useFavorites } from '../../favorites/FavoritesContext';
 
 export default function Home() {
-   const { user, logout } = useAuth();
   const [songs, setSongs] = useState<Song[]>([]);
   const [top, setTop] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState('');
   const { setQueueAndPlay, current, isPlaying } = usePlayer();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [openMix, setOpenMix] = useState(false);
   const [presetSongId, setPresetSongId] = useState<string | null>(null);
   const [menuSongId, setMenuSongId] = useState<string | null>(null);
@@ -63,7 +63,7 @@ export default function Home() {
     <div className="min-h-screen">
       <Navbar />
       <main className="container-responsive py-6">
-        <h2 className="text-lg text-neutral-600 dark:text-white/80">Bienvenid@ {user?.username}, disfruta de miles de canciones</h2>
+        <h2 className="text-lg text-neutral-600 dark:text-white/80">Bienvenid@, disfruta de miles de canciones</h2>
         <div className="mt-6 flex items-center">
           <div className="relative w-full">
             <input
@@ -96,7 +96,14 @@ export default function Home() {
                     />
                   </button>
                   {/* Card actions */}
-                  <div className="absolute top-2 right-2 z-40">
+                  <div className="absolute top-2 right-2 z-40 flex items-center gap-2">
+                    <button
+                      aria-label={isFavorite(song.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(song); }}
+                      className={`p-2 rounded-md ${isFavorite(song.id) ? 'bg-brand text-white' : 'bg-black/50 text-white hover:bg-black/60'}`}
+                    >
+                      <Heart size={16} fill={isFavorite(song.id) ? 'currentColor' : 'transparent'} />
+                    </button>
                     <button
                       aria-label="Opciones"
                       onClick={(e) => { e.stopPropagation(); setMenuSongId(prev => prev === String(song.id) ? null : String(song.id)); }}
@@ -124,7 +131,7 @@ export default function Home() {
                   </div>
                   <button
                     aria-label="Reproducir"
-                    onClick={() => setQueueAndPlay(top, idx)}
+                    onClick={() => setQueueAndPlay(filteredTop, idx)}
                     className="absolute right-2 bottom-14 p-2 rounded-full bg-brand text-white shadow-md hover:brightness-110">
                     <Play size={20} />
                   </button>
@@ -158,7 +165,14 @@ export default function Home() {
                     />
                   </button>
                   {/* Card actions */}
-                  <div className="absolute top-2 right-2 z-40">
+                  <div className="absolute top-2 right-2 z-40 flex items-center gap-2">
+                    <button
+                      aria-label={isFavorite(song.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(song); }}
+                      className={`p-2 rounded-md ${isFavorite(song.id) ? 'bg-brand text-white' : 'bg-black/50 text-white hover:bg-black/60'}`}
+                    >
+                      <Heart size={16} fill={isFavorite(song.id) ? 'currentColor' : 'transparent'} />
+                    </button>
                     <button
                       aria-label="Opciones"
                       onClick={(e) => { e.stopPropagation(); setMenuSongId(prev => prev === String(song.id) ? null : String(song.id)); }}
