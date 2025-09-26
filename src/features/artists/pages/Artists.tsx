@@ -14,7 +14,7 @@ export default function Artists() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const { setQueueAndPlay } = usePlayer();
+  const { setQueueAndPlay, current, isPlaying } = usePlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
@@ -118,10 +118,16 @@ export default function Artists() {
                     <button onClick={() => setQueueAndPlay(currentSongs, idx)} className="block w-full text-left">
                       <div className="aspect-square bg-cover bg-center" style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/artist/400/400'})` }} />
                     </button>
+                    {current?.id === song.id && isPlaying && (
+                      <div className="absolute left-2 bottom-14">
+                        <div className="eq-bars"><span></span><span></span><span></span></div>
+                      </div>
+                    )}
                     <button
                       aria-label="Reproducir"
                       onClick={() => setQueueAndPlay(currentSongs, idx)}
-                      className="absolute right-2 bottom-14 p-2 rounded-full bg-brand text-white shadow-md hover:brightness-110">
+                      className="absolute right-2 bottom-14 p-2 rounded-full bg-brand text-white shadow-md hover:brightness-110"
+                    >
                       <Play size={20} />
                     </button>
                     <div className="p-3">
