@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Song } from '../features/songs/api';
+import { incrementPlay } from '../features/songs/api';
 
 export type RepeatMode = 'off' | 'one' | 'all';
 
@@ -43,6 +44,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [muted, setMuted] = useState<boolean>(() => localStorage.getItem('player:muted') === '1');
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const maxPlayedRef = useRef(0);
+  const nextRef = useRef<() => void>(() => {});
 
   // Lazy create audio element once
   if (!audioRef.current) {
@@ -58,39 +61,45 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const onTime = () => setCurrentTime(audio.currentTime || 0);
     const onLoaded = () => setDuration(audio.duration || 0);
-    const onEnded = () => {
+    const onEnded = async () => {
+      // Count a play only if the track finished
+      const finished = queue[index];
+      // 90% rule
+      const total = audio.duration || duration || 0;
+      const listened = maxPlayedRef.current || 0;
+      const ratio = total > 0 ? listened / total : 0;
+      if (finished?.id && ratio >= 0.9) {
+        try { await incrementPlay(finished.id); } catch {}
+      }
       if (repeat === 'one') {
         audio.currentTime = 0;
         audio.play();
+        maxPlayedRef.current = 0;
         return;
       }
-      next();
+      maxPlayedRef.current = 0;
+      nextRef.current();
     };
-    audio.addEventListener('timeupdate', onTime);
+    const onTimeTracked = () => {
+      const t = audio.currentTime || 0;
+      if (t > maxPlayedRef.current) maxPlayedRef.current = t;
+      onTime();
+    };
+    audio.addEventListener('timeupdate', onTimeTracked);
     audio.addEventListener('loadedmetadata', onLoaded);
     audio.addEventListener('ended', onEnded);
     return () => {
-      audio.removeEventListener('timeupdate', onTime);
+      audio.removeEventListener('timeupdate', onTimeTracked);
       audio.removeEventListener('loadedmetadata', onLoaded);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [audio, repeat]);
+  }, [audio, repeat, queue, index, duration]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target && (e.target as HTMLElement).tagName === 'INPUT') return;
-      if (e.code === 'Space') { e.preventDefault(); isPlaying ? pause() : play(); }
-      if (e.code === 'ArrowRight') { seek(Math.min(duration, currentTime + 5)); }
-      if (e.code === 'ArrowLeft') { seek(Math.max(0, currentTime - 5)); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, currentTime, duration]);
 
   const loadAndPlay = useCallback(async (song: Song) => {
     if (!song?.audioUrl) return;
     audio.src = song.audioUrl;
+    maxPlayedRef.current = 0;
     try {
       await audio.play();
       setIsPlaying(true);
@@ -123,6 +132,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     setIndex(nextIndex);
     loadAndPlay(queue[nextIndex]);
   }, [queue, index, shuffle, repeat, loadAndPlay]);
+  // keep next in a ref to avoid TDZ and stale closures
+  useEffect(() => { nextRef.current = next; }, [next]);
 
   const prev = useCallback(() => {
     if (queue.length === 0) return;
@@ -136,6 +147,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audio.currentTime = time;
     setCurrentTime(time);
   }, [audio]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target && (e.target as HTMLElement).tagName === 'INPUT') return;
+      if (e.code === 'Space') { e.preventDefault(); isPlaying ? pause() : play(); }
+      if (e.code === 'ArrowRight') { seek(Math.min(duration, currentTime + 5)); }
+      if (e.code === 'ArrowLeft') { seek(Math.max(0, currentTime - 5)); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPlaying, currentTime, duration, pause, play, seek]);
 
   const setVolume = useCallback((v: number) => {
     const clamped = Math.min(1, Math.max(0, v));
