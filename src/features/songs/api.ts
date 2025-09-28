@@ -17,3 +17,7 @@ export async function getSongs() {
 export async function getTopSongs() {
   return api<Song[]>('/songs/top');
 }
+
+export async function incrementPlay(songId: string) {
+  return api<{ ok: true }>(`/songs/${songId}/play`, { method: 'POST' });
+}
