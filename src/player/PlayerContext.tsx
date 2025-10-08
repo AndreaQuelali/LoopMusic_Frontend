@@ -7,7 +7,6 @@ import { useAuth } from '../features/auth/AuthContext';
 
 export type RepeatMode = 'off' | 'one' | 'all';
 
-// Recently listened: persist last finished tracks locally
 function addToRecentlyListened(song: Song) {
   try {
     const key = 'recently_listened_v1';
