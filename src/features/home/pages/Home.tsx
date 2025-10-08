@@ -1,12 +1,14 @@
 import React from 'react';
 import Navbar from '../../../components/Navbar';
 import { useEffect, useState } from 'react';
-import { getSongs, getTopSongs, Song } from '../../songs/api';
+import { getTopSongs, Song } from '../../songs/api';
 import BottomPlayer from '../../../player/AudioPlayer';
 import { usePlayer } from '../../../player/PlayerContext';
 import { Play, MoreVertical, Heart, Search } from 'lucide-react';
 import CreateMixModal from '../../mixes/components/CreateMixModal';
 import { useFavorites } from '../../favorites/FavoritesContext';
+import { useAuth } from '../../auth/AuthContext';
+import { getRecentlySongs } from '../../recently/api';
 
 export default function Home() {
   const [songs, setSongs] = useState<Song[]>([]);
@@ -19,6 +21,7 @@ export default function Home() {
   const [openMix, setOpenMix] = useState(false);
   const [presetSongId, setPresetSongId] = useState<string | null>(null);
   const [menuSongId, setMenuSongId] = useState<string | null>(null);
+  const { token, user } = useAuth();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuSongId(null); };
@@ -43,27 +46,63 @@ export default function Home() {
 
   useEffect(() => {
     let mounted = true;
+    const loadRecentFromStorage = () => {
+      try {
+        const raw = localStorage.getItem('recently_listened_v1');
+        if (!raw) { if (mounted) setSongs([]); return; }
+        const items: { id: string; ts: number; song: Song }[] = JSON.parse(raw);
+        const list = items
+          .sort((a, b) => b.ts - a.ts)
+          .map(x => x.song);
+        if (mounted) setSongs(list);
+      } catch { /* ignore */ }
+    };
     (async () => {
       try {
-        const [recent, top10] = await Promise.all([getSongs(), getTopSongs()]);
-        if (mounted) {
-          setSongs(recent);
-          setTop(top10);
-        }
+        const top10 = await getTopSongs();
+        if (mounted) setTop(top10);
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Error cargando canciones');
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
-  }, []);
+
+    const loadRecentInitial = async () => {
+      if (token) {
+        try {
+          const recents = await getRecentlySongs();
+          if (mounted) setSongs(recents);
+        } catch {
+          loadRecentFromStorage();
+        }
+      } else {
+        loadRecentFromStorage();
+      }
+    };
+    loadRecentInitial();
+   
+    const onRecent = async () => {
+      if (token) {
+        try {
+          const recents = await getRecentlySongs();
+          if (mounted) setSongs(recents);
+        } catch {
+          // ignore
+        }
+      } else {
+        loadRecentFromStorage();
+      }
+    };
+    window.addEventListener('recently-listened', onRecent as EventListener);
+    return () => { mounted = false; window.removeEventListener('recently-listened', onRecent as EventListener); };
+  }, [token]);
 
   return (
     <div className="min-h-screen">
       <Navbar />
       <main className="container-responsive py-6">
-        <h2 className="text-lg text-neutral-600 dark:text-white/80">Bienvenid@, disfruta de miles de canciones</h2>
+        <h2 className="text-lg text-neutral-600 dark:text-white/80">{`Bienvenid@${user?.username ? ` ${user.username}` : ''}, disfruta de miles de canciones`}</h2>
         <div className="mt-6 flex items-center">
           <div className="relative w-full">
             <input
@@ -95,7 +134,7 @@ export default function Home() {
                       style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/400/400' })` }}
                     />
                   </button>
-                  {/* Card actions */}
+              
                   <div className="absolute top-2 right-2 z-40 flex items-center gap-2">
                     <button
                       aria-label={isFavorite(song.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
@@ -125,7 +164,7 @@ export default function Home() {
                       <div className="eq-bars"><span></span><span></span><span></span></div>
                     </div>
                   )}
-                  {/* Rank badge */}
+                  {/* Rank */}
                   <div className="absolute left-2 top-2 size-9 rounded-md grid place-items-center font-bold text-white bg-black/60 dark:bg-black/60">
                     {idx + 1}
                   </div>
@@ -164,7 +203,7 @@ export default function Home() {
                       style={{ backgroundImage: `url(${song.coverUrl || 'https://picsum.photos/seed/loop-fallback/600/400' })` }}
                     />
                   </button>
-                  {/* Card actions */}
+              
                   <div className="absolute top-2 right-2 z-40 flex items-center gap-2">
                     <button
                       aria-label={isFavorite(song.id) ? 'Quitar de favoritos' : 'Agregar a favoritos'}
