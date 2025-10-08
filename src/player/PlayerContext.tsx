@@ -1,8 +1,30 @@
+ 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Song } from '../features/songs/api';
 import { incrementPlay } from '../features/songs/api';
+import { addRecently } from '../features/recently/api';
+import { useAuth } from '../features/auth/AuthContext';
 
 export type RepeatMode = 'off' | 'one' | 'all';
+
+function addToRecentlyListened(song: Song) {
+  try {
+    const key = 'recently_listened_v1';
+    const raw = localStorage.getItem(key);
+    const now = Date.now();
+    let items: { id: string; ts: number; song: Song }[] = [];
+    if (raw) items = JSON.parse(raw);
+    // remove if exists
+    items = items.filter(x => x.id !== song.id);
+    // add to start
+    items.unshift({ id: song.id, ts: now, song });
+    // keep up to 30
+    if (items.length > 30) items = items.slice(0, 30);
+    localStorage.setItem(key, JSON.stringify(items));
+    // Notify listeners (Home)
+    window.dispatchEvent(new CustomEvent('recently-listened', { detail: { id: song.id } }));
+  } catch {}
+}
 
 type PlayerContextValue = {
   queue: Song[];
@@ -32,6 +54,7 @@ const PlayerContext = createContext<PlayerContextValue | undefined>(undefined);
 
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { token } = useAuth();
   const [queue, setQueue] = useState<Song[]>([]);
   const [index, setIndex] = useState<number>(-1);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -70,6 +93,13 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       const ratio = total > 0 ? listened / total : 0;
       if (finished?.id && ratio >= 0.9) {
         try { await incrementPlay(finished.id); } catch {}
+        // store recently listened (backend if auth, else local)
+        if (token) {
+          try { await addRecently(finished.id); } catch {}
+          try { window.dispatchEvent(new CustomEvent('recently-listened')); } catch {}
+        } else {
+          addToRecentlyListened(finished);
+        }
       }
       if (repeat === 'one') {
         audio.currentTime = 0;
