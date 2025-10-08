@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { usePlayer } from './PlayerContext';
-import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Volume2, VolumeX } from 'lucide-react';
+import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Volume2, VolumeX, X } from 'lucide-react';
 
 function formatTime(sec: number) {
   if (!isFinite(sec) || sec < 0) return '0:00';
@@ -18,8 +18,24 @@ export default function AudioPlayer() {
   } = usePlayer();
 
   const progress = useMemo(() => duration ? (currentTime / duration) * 100 : 0, [currentTime, duration]);
+  const [hidden, setHidden] = useState(false);
+  const lastIdRef = useRef<string | null>(null);
 
-  if (!current) return null;
+  // Auto-unhide when playback resumes
+  useEffect(() => {
+    if (isPlaying) setHidden(false);
+  }, [isPlaying]);
+
+  // Auto-unhide when a NEW track is selected (id changed)
+  useEffect(() => {
+    const id = current?.id ?? null;
+    if (id && id !== lastIdRef.current) {
+      setHidden(false);
+      lastIdRef.current = id;
+    }
+  }, [current?.id]);
+
+  if (!current || hidden) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-neutral-200 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-black/60">
@@ -73,7 +89,7 @@ export default function AudioPlayer() {
           </div>
         </div>
 
-        {/* Right: volume */}
+        {/* Right: controls (volume + close) */}
         <div className="hidden md:flex items-center gap-2 w-52 justify-end">
           <button onClick={toggleMute} className="p-2" title={muted ? 'Activar sonido' : 'Silenciar'}>
             {muted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
@@ -87,6 +103,15 @@ export default function AudioPlayer() {
             onChange={(e) => setVolume(parseFloat(e.target.value))}
             className="w-36 accent-brand"
           />
+          <button onClick={() => { pause(); setHidden(true); }} className="p-2" title="Cerrar reproductor">
+            <X size={18} />
+          </button>
+        </div>
+        {/* Mobile: close button */}
+        <div className="flex md:hidden items-center ml-auto">
+          <button onClick={() => { pause(); setHidden(true); }} className="p-2" title="Cerrar reproductor">
+            <X size={18} />
+          </button>
         </div>
       </div>
     </div>
