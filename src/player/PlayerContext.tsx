@@ -123,7 +123,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       audio.removeEventListener('loadedmetadata', onLoaded);
       audio.removeEventListener('ended', onEnded);
     };
-  }, [audio, repeat, queue, index, duration]);
+  }, [audio, repeat, queue, index, duration, token]);
 
 
   const loadAndPlay = useCallback(async (song: Song) => {

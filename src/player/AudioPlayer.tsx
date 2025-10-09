@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { usePlayer } from './PlayerContext';
 import { Shuffle, SkipBack, Play, Pause, SkipForward, Repeat, Repeat1, Volume2, VolumeX, X } from 'lucide-react';
 
@@ -17,7 +17,6 @@ export default function AudioPlayer() {
     shuffle, toggleShuffle, repeat, cycleRepeat,
   } = usePlayer();
 
-  const progress = useMemo(() => duration ? (currentTime / duration) * 100 : 0, [currentTime, duration]);
   const [hidden, setHidden] = useState(false);
   const lastIdRef = useRef<string | null>(null);
 
