@@ -66,6 +66,7 @@ Abre http://localhost:3001 en tu navegador. La app recargará ante cambios.
 
 - Backend por defecto: `http://localhost:3000`.
 - Recomendado ejecutar el frontend en `http://localhost:3001` para evitar conflicto de puertos con el backend.
+- Repositorio: `https://github.com/AndreaQuelali/LoopMusic_Backend`
 
 ---
 
