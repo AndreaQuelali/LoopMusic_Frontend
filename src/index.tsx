@@ -6,6 +6,8 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './theme/ThemeContext';
+import { PlayerProvider } from './player/PlayerContext';
+import { FavoritesProvider } from './features/favorites/FavoritesContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -15,7 +17,11 @@ root.render(
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <FavoritesProvider>
+            <PlayerProvider>
+              <App />
+            </PlayerProvider>
+          </FavoritesProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

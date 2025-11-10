@@ -8,6 +8,7 @@ type AuthContextValue = {
   token: string | null;
   setAuth: (data: AuthResponse) => void;
   logout: () => void;
+  updateUser: (user: NonNullable<AuthUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -37,6 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(null);
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+    },
+    updateUser: (u) => {
+      setUser(u);
+      try { localStorage.setItem('user', JSON.stringify(u)); } catch {}
     }
   }), [user, token]);
 

@@ -21,3 +21,21 @@ export async function login(input: LoginInput) {
     body: JSON.stringify(input),
   });
 }
+
+export async function me() {
+  return api<{ user: AuthResponse['user'] }>(`/auth/me`);
+}
+
+export async function updateUsername(username: string) {
+  return api<{ user: AuthResponse['user'] }>(`/auth/me`, {
+    method: 'PATCH',
+    body: JSON.stringify({ username }),
+  });
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  return api<{ ok: true }>(`/auth/me/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
