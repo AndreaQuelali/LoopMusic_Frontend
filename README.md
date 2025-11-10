@@ -1,7 +1,5 @@
 # LoopMusic Frontend — Guía de instalación y uso
 
-Aplicación React (CRA) que consume el backend de LoopMusic para autenticación y listado de canciones.
-
 ## Requisitos
 
 - Node.js 18+
@@ -71,4 +69,4 @@ Abre http://localhost:3001 en tu navegador. La app recargará ante cambios.
 
 ---
 
-Proyecto inicializado con [Create React App](https://github.com/facebook/create-react-app).
+
